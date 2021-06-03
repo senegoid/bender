@@ -149,27 +149,21 @@ if (process.env.USERS) {
     userCache = JSON.parse(process.env.USERS);
 } 
 
-async function getTokenForTeam(teamId) {
-    if (tokenCache[teamId]) {
-        return new Promise((resolve) => {
-            setTimeout(function() {
-                resolve(tokenCache[teamId]);
-            }, 150);
-        });
+async function getTokenForTeam(teamId){
+    const team = await storage.read([teamId]);
+    if (team && team.bot_access_token) {
+        return team.bot_access_token
     } else {
         console.error('Team not found in tokenCache: ', teamId);
     }
-}
-
-async function getBotUserByTeam(teamId) {
-    if (userCache[teamId]) {
-        return new Promise((resolve) => {
-            setTimeout(function() {
-                resolve(userCache[teamId]);
-            }, 150);
-        });
+  }
+  
+  async function getBotUserByTeam(teamId) {
+    const team = await storage.read([teamId]);
+    if (team && team.bot_user_id) {
+        return team.bot_user_id
     } else {
-        console.error('Team not found in userCache: ', teamId);
+      console.error('Team not found in userCache: ', teamId);
     }
-}
+  }
 
