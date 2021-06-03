@@ -116,6 +116,13 @@ controller.webserver.get('/install/auth', async (req, res) => {
 
         console.log('FULL OAUTH DETAILS', results);
 
+        storage.write({
+            [results.team_id]: {
+              bot_access_token: results.bot.bot_access_token,
+              bot_user_id: results.bot.bot_user_id,
+            },
+          })
+
         // Store token by team in bot state.
         tokenCache[results.team_id] = results.bot.bot_access_token;
 
