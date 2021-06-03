@@ -145,7 +145,6 @@ if (process.env.USERS) {
 
 async function getTokenForTeam(teamId){
     const team = (await storage.read([teamId]))[teamId];
-    console.log(team);
     if (team && team.bot_access_token) {
         return team.bot_access_token
     } else {
@@ -155,7 +154,6 @@ async function getTokenForTeam(teamId){
   
   async function getBotUserByTeam(teamId) {
     const team = (await storage.read([teamId]))[teamId];
-    console.log(team);
     if (team && team.bot_user_id) {
         return team.bot_user_id
     } else {
