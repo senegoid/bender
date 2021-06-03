@@ -27,15 +27,9 @@ if (process.env.MONGO_URI) {
 
 
 const adapter = new SlackAdapter({
-    // REMOVE THIS OPTION AFTER YOU HAVE CONFIGURED YOUR APP!
-    enable_incomplete: true,
-
     // parameters used to secure webhook endpoint
     verificationToken: process.env.VERIFICATION_TOKEN,
     clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,  
-
-    // auth token for a single-team app
-    botToken: process.env.BOT_TOKEN,
 
     // credentials used to set up oauth for multi-team apps
     clientId: process.env.CLIENT_ID,
@@ -151,6 +145,7 @@ if (process.env.USERS) {
 
 async function getTokenForTeam(teamId){
     const team = await storage.read([teamId]);
+    console.log(team);
     if (team && team.bot_access_token) {
         return team.bot_access_token
     } else {
@@ -160,6 +155,7 @@ async function getTokenForTeam(teamId){
   
   async function getBotUserByTeam(teamId) {
     const team = await storage.read([teamId]);
+    console.log(team);
     if (team && team.bot_user_id) {
         return team.bot_user_id
     } else {
