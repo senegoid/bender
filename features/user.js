@@ -1,10 +1,11 @@
 const {formatUptime} = require("../helper");
 
-module.exports = function(controller) {
+module.exports = async (controller) => {
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async (bot, message) => {
-    console.log(message.user);
-    console.log(message);
-    controller.storage.users.save({id: message.user, updateAt:Date()});
+    let profile = await bot.api.users.info({user: message.user});
+    if(profile.ok){
+        controller.storage.write({[message.user]: {...profile, updateAt:Date()}});
+    }
 
     bot.api.reactions.add({
         timestamp: message.ts,
@@ -17,13 +18,14 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async
     });
 
 
-    controller.storage.users.get(message.user, function(err, user) {
-        if (user && user.name) {
+    const data = await controller.storage.read([message.user])
+    console.log(data)
+    /*if (user && user.name) {
             bot.reply(message, 'Hello ' + user.name + '!!');
         } else {
             bot.reply(message, 'Hello.');
         }
-    });
+    });*/
 });
 
 controller.hears(['call me (.*)', 'my name is (.*)'], 'direct_message,direct_mention,mention', function(bot, message) {
