@@ -4,7 +4,7 @@ module.exports = async (controller) => {
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async (bot, message) => {
     let profile = await bot.api.users.info({user: message.user});
     if(profile.ok){
-        controller.storage.write({[message.user]: {...profile, updateAt:Date()}});
+        controller.storage.write({[message.user]: {...profile.user, updateAt:Date()}});
     }
 
     bot.api.reactions.add({
@@ -18,14 +18,10 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async
     });
 
 
-    const data = await controller.storage.read([message.user])
-    console.log(data)
-    /*if (user && user.name) {
-            bot.reply(message, 'Hello ' + user.name + '!!');
-        } else {
-            bot.reply(message, 'Hello.');
-        }
-    });*/
+    const user = (await controller.storage.read([message.user]))[message.user]
+    console.log(user)
+    bot.reply(message, 'Hello ' + user.real_name + '!!');
+     
 });
 
 controller.hears(['call me (.*)', 'my name is (.*)'], 'direct_message,direct_mention,mention', function(bot, message) {
