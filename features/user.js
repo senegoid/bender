@@ -4,7 +4,7 @@ module.exports = function(controller) {
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async (bot, message) => {
     console.log(message.user);
     console.log(message);
-    controller.storage.save({id: message.user, updateAt:Date()});
+    controller.storage.users.save({id: message.user, updateAt:Date()});
 
     bot.api.reactions.add({
         timestamp: message.ts,
