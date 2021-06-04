@@ -1,8 +1,10 @@
 const {formatUptime} = require("../helper");
 
 module.exports = function(controller) {
-controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', function(bot, message) {
-
+controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async (bot, message) => {
+    console.log(message.user);
+    console.log(message);
+    
     bot.api.reactions.add({
         timestamp: message.ts,
         channel: message.channel,
