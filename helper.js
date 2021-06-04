@@ -16,4 +16,4 @@ const formatUptime = (uptime) => {
     return uptime;
 }
 
-export {formatUptime}
+module.exports = formatUptime;
