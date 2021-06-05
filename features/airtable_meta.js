@@ -1,7 +1,18 @@
-const {formatUptime} = require("../helper");
+module.exports = function(controller) {
+  controller.hears([new RegExp('[A-Z][A-Z0-9]+-[0-9]+')], ['ambient'],  (bot, message) => {
+    console.log(message);
+  });
 
-module.exports = async (controller) => {
-  controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', async (bot, message) => {
+  controller.hears([/[A-Z][A-Z0-9]+-[0-9]+/g], ['direct_message'], function (bot, message) {
+    console.log(message);
+    console.log(message.match.length);
+  
+    for(var i = 0; i < message.match.length; i += 1) {
+      bot.reply(message, `Match found: \`${message.match[i]}\``);
+    }
+  }); 
+
+  controller.hears(['set base'], 'direct_message,direct_mention,mention', async (bot, message) => {
     let user;
     try {
       user = (await controller.storage.read([message.user]))[message.user]
@@ -29,5 +40,4 @@ module.exports = async (controller) => {
 }
 
 
-
-
+}
