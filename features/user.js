@@ -7,6 +7,7 @@ module.exports = async (controller) => {
       user = (await controller.storage.read([message.user]))[message.user]
     } catch (error) {
       let profile = await bot.api.users.info({user: message.user});
+      console.log(profile);
       if(profile.ok){
         user = {...profile.user, updateAt:Date()}
         controller.storage.write({[message.user]: user});        
