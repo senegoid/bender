@@ -1,20 +1,17 @@
 module.exports = function(controller) {
   
   controller.hears(new RegExp(/set airtable base (.*?)$/i), ['direct_message'], async (bot, message) => {
-    console.log(message);    
-    for(var i = 0; i < message.matches.length; i += 1) {
-      bot.reply(message, `Match found: \`${message.matches[i]}\``);
-    }
-  }); 
+    const base = message.matches[1];
 
-  controller.hears(['set bases'], 'direct_message,direct_mention,mention', async (bot, message) => {
+    bot.reply(message, `trying: \`${base}\``);
+
     let user;
     try {
       user = (await controller.storage.read([message.user]))[message.user]
     } catch (error) {
       let profile = await bot.api.users.info({user: message.user});
       if(profile.ok){
-        controller.storage.write({[message.user]: {...profile.user, updateAt:Date()}});
+        user = await controller.storage.write({[message.user]: { ...profile.user, updateAt:Date()}});
       }      
     }
 
@@ -27,6 +24,10 @@ module.exports = function(controller) {
         bot.botkit.log('Failed to add emoji reaction :(', err);
       }
     });
+
+    await controller.storage.write({[message.user]: { ...user, airtableBase: base, updateAt:Date()}});
+
+
 
     
     bot.reply(message, 'Hello ' + user.real_name + '!!');
