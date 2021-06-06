@@ -18,7 +18,7 @@ module.exports = function(controller) {
     bot.api.reactions.add({
       timestamp: message.ts,
       channel: message.channel,
-      name: 'robot_face',
+      name: 'eyes',
     },function(err, res) {
       if (err) {
         bot.botkit.log('Failed to add emoji reaction :(', err);
@@ -26,11 +26,7 @@ module.exports = function(controller) {
     });
 
     await controller.storage.write({[message.user]: { ...user, airtableBase: base, updateAt:Date()}});
-
-
-
-    
-    bot.reply(message, 'Hello ' + user.real_name + '!!');
+    bot.reply(message, 'Done!');
      
   });
 }
