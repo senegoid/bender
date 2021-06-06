@@ -5,10 +5,10 @@ module.exports = function(controller) {
 
   controller.hears([/[A-Z][A-Z0-9]+-[0-9]+/g], ['direct_message'], function (bot, message) {
     console.log(message);
-    console.log(message.match.length);
+    console.log(message.matches.length);
   
-    for(var i = 0; i < message.match.length; i += 1) {
-      bot.reply(message, `Match found: \`${message.match[i]}\``);
+    for(var i = 0; i < message.matches.length; i += 1) {
+      bot.reply(message, `Match found: \`${message.matches[i]}\``);
     }
   }); 
 
