@@ -1,18 +1,13 @@
 module.exports = function(controller) {
-  controller.hears([new RegExp('[A-Z][A-Z0-9]+-[0-9]+')], ['ambient'],  (bot, message) => {
-    console.log(message);
-  });
-
-  controller.hears([/[A-Z][A-Z0-9]+-[0-9]+/g], ['direct_message'], function (bot, message) {
-    console.log(message);
-    console.log(message.matches.length);
   
+  controller.hears([/set airtable base (.*)/ig], ['direct_message'], async (bot, message) => {
+    console.log(message);
     for(var i = 0; i < message.matches.length; i += 1) {
       bot.reply(message, `Match found: \`${message.matches[i]}\``);
     }
   }); 
 
-  controller.hears(['set base'], 'direct_message,direct_mention,mention', async (bot, message) => {
+  controller.hears(['set bases'], 'direct_message,direct_mention,mention', async (bot, message) => {
     let user;
     try {
       user = (await controller.storage.read([message.user]))[message.user]
