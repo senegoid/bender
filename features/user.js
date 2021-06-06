@@ -8,8 +8,8 @@ module.exports = async (controller) => {
     } catch (error) {
       let profile = await bot.api.users.info({user: message.user});
       if(profile.ok){
-        user = await controller.storage.write({[message.user]: {...profile.user, updateAt:Date()}});
-        console.log(user)
+        user = {...profile.user, updateAt:Date()}
+        await controller.storage.write({[message.user]: user});        
       }      
     }
 
@@ -22,7 +22,7 @@ module.exports = async (controller) => {
         bot.botkit.log('Failed to add emoji reaction :(', err);
       }
     });
-
+    console.log(user);
     
     bot.reply(message, 'Hello ' + user.real_name + '!!');
      
