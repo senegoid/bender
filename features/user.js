@@ -9,7 +9,7 @@ module.exports = async (controller) => {
       let profile = await bot.api.users.info({user: message.user});
       if(profile.ok){
         user = {...profile.user, updateAt:Date()}
-        await controller.storage.write({[message.user]: user});        
+        controller.storage.write({[message.user]: user});        
       }      
     }
 
