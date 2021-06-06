@@ -1,6 +1,6 @@
 module.exports = function(controller) {
   
-  controller.hears(new RegExp(/set airtable base (.*?)$/ig), ['direct_message'], async (bot, message) => {
+  controller.hears(new RegExp(/set airtable base (.*?)$/i), ['direct_message'], async (bot, message) => {
     console.log(message);    
     for(var i = 0; i < message.matches.length; i += 1) {
       bot.reply(message, `Match found: \`${message.matches[i]}\``);
