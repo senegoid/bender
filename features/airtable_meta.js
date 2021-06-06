@@ -32,6 +32,20 @@ module.exports = function(controller) {
      
   });
 
-  
+  controller.hears('show base id','message,direct_message', async(bot, message) => {
+    let user;
+    try {
+      user = (await controller.storage.read([message.user]))[message.user]
+      if (user.airtableBase){
+        bot.reply(message, `It's ${user.airtableBase}`);
+      }
+      else{
+        bot.reply(message, 'Say: set artable base xxxxxxxxxxx to choose one.');
+      }
+
+    } catch (error) {
+      bot.reply(message, 'I do not know you!')
+    }
+  });  
 }
 
