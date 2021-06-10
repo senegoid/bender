@@ -1,35 +1,24 @@
+require('dotenv').config();
+const ListCoaches = require("../airtable/coaches") 
 module.exports = function(controller) {
 
   
   controller.hears(new RegExp(/set airtable base (.*?)$/i), ['direct_message'], async (bot, message) => {
     const base = message.matches[1];
+    setAirtableBase(bot, message, base);
+    return true; 
+  });
 
-    bot.reply(message, `trying: \`${base}\``);
-
+  controller.hears('show coaches','message,direct_message', async(bot, message) => {
+    const key = process.env.AIRTABLE_API_KEY;
     let user;
     try {
       user = (await controller.storage.read([message.user]))[message.user]
-    } catch (error) {
-      let profile = await bot.api.users.info({user: message.user});
-      if(profile.ok){
-        user = {...profile.user, updateAt:Date()}
-        controller.storage.write({[message.user]: user});
-      }      
-    }
-
-    bot.api.reactions.add({
-      timestamp: message.ts,
-      channel: message.channel,
-      name: 'eyes',
-    },function(err, res) {
-      if (err) {
-        bot.botkit.log('Failed to add emoji reaction :(', err);
+      if (user.airtableBase){
+        ShowListCoatches(bot, message, key, user.airtableBase);
       }
-    });
-
-    await controller.storage.write({[message.user]: { ...user, airtableBase: base, updateAt:Date()}});
-    bot.reply(message, 'Done!');
-     
+    } catch (error) {
+    }
   });
 
   controller.hears('show base id','message,direct_message', async(bot, message) => {
@@ -44,8 +33,42 @@ module.exports = function(controller) {
       }
 
     } catch (error) {
-      bot.reply(message, 'I do not know you!')
     }
-  });  
-}
+  });
+  
+  const ShowListCoatches = async (bot, message, key, base) => {
+    bot.api.reactions.add({
+      timestamp: message.ts,
+      channel: message.channel,
+      name: 'robot_face',
+    });
+    await bot.changeContext(message.reference)
+    const coaches = await ListCoaches(key, base);
+    for await (let coach of coaches) {
+      await bot.reply(message, `${coach.FullName} (${coach.Email})`);
+    }
+  }
 
+  const setAirtableBase = async (bot, message, base) => {
+    bot.api.reactions.add({
+      timestamp: message.ts,
+      channel: message.channel,
+      name: 'robot_face',
+    });
+    await bot.changeContext(message.reference)
+    let user;
+    try {
+      user = await controller.storage.read([message.user]);
+      if (user[message.user]){
+        user = user[message.user];
+        controller.storage.write({[message.user]: { ...user, airtableBase: base, updateAt:Date()}});
+        await bot.reply(message, 'Done!');
+      }
+      else{
+        bot.reply(message, 'I do not know you!')
+      }      
+    } catch (error) {
+      bot.reply(message, error.toString())
+    }
+  }
+}
