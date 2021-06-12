@@ -1,7 +1,6 @@
 require('dotenv').config();
 const ListCoaches = require("../airtable/coaches") 
 module.exports = function(controller) {
-
   
   controller.hears(new RegExp(/set airtable base (.*?)$/i), ['direct_message'], async (bot, message) => {
     const base = message.matches[1];
@@ -9,17 +8,7 @@ module.exports = function(controller) {
     return true; 
   });
 
-  controller.hears('show coaches','message,direct_message', async(bot, message) => {
-    const key = process.env.AIRTABLE_API_KEY;
-    let user;
-    try {
-      user = (await controller.storage.read([message.user]))[message.user]
-      if (user.airtableBase){
-        ShowListCoatches(bot, message, key, user.airtableBase);
-      }
-    } catch (error) {
-    }
-  });
+  
 
   controller.hears('show base id','message,direct_message', async(bot, message) => {
     let user;
@@ -36,19 +25,7 @@ module.exports = function(controller) {
     }
   });
   
-  const ShowListCoatches = async (bot, message, key, base) => {
-    bot.api.reactions.add({
-      timestamp: message.ts,
-      channel: message.channel,
-      name: 'robot_face',
-    });
-    await bot.changeContext(message.reference)
-    const coaches = await ListCoaches(key, base);
-    for await (let coach of coaches) {
-      await bot.reply(message, `${coach.FullName} (${coach.Email})`);
-    }
-  }
-
+  
   const setAirtableBase = async (bot, message, base) => {
     bot.api.reactions.add({
       timestamp: message.ts,
