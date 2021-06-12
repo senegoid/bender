@@ -14,9 +14,9 @@ module.exports = function(controller) {
         }
     });
 
-    controller.on('direct_message', async(bot, message) => {
-        await bot.reply(message,'I heard a private message');
-    });
+    // controller.on('direct_message', async(bot, message) => {
+    //     await bot.reply(message,'I heard a private message');
+    // });
 
     controller.hears('dm me', 'message', async(bot, message) => {
         await bot.startPrivateConversation(message.user);

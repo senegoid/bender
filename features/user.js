@@ -36,7 +36,7 @@ module.exports = async (controller) => {
         await bot.reply(message, 'You are admin!');
       }
       if(user.is_owner){
-        await bot.reply(message, 'You the Boss!');
+        await bot.reply(message, 'You are the Boss!');
       }      
     } catch (error) {
       await bot.reply(message, error.toString())
