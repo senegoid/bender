@@ -6,35 +6,39 @@ module.exports = function (controller) {
   const key = process.env.AIRTABLE_API_KEY;
 
   controller.hears('show programs', 'message,direct_message', async (bot, message) => {
-    let user;
-    try {
-      user = (await controller.storage.read([message.user]))[message.user]
-      if (user.airtableBase) {
-        ShowPrograms(bot, message, key, user.airtableBase);
-      }
-    } catch (error) {
-    }
+
+    ShowPrograms(bot, message, key);
+    return true;
   });
 
   controller.hears('report type of programs', 'message,direct_message', async (bot, message) => {
-    let user;
-    try {
-      user = (await controller.storage.read([message.user]))[message.user]
-      if (user.airtableBase) {
-        ReportPrograms(bot, message, key, user.airtableBase);
-      }
-    } catch (error) {
-    }
+
+    ReportPrograms(bot, message, key);
+    return true;
   });
 
 
-  const ShowPrograms = async (bot, message, key, base) => {
+  const ShowPrograms = async (bot, message, key) => {
+    await bot.changeContext(message.reference)
+    let user;
+    try {
+      user = await controller.storage.read([`${message.team}_users`])
+      user = user[`${message.team}_users`][message.user]
+      if (!user.airtableBase) {
+        bot.reply(message, "You didn't choose an Airtable base \n Say: set airtable base xxxxxxxxxxx to choose one.")
+        return
+      }
+    } catch (error) {
+      bot.reply(message, "Who are you? I don't think I have your username. Say hi to me.");
+    }
+    const base = user.airtableBase
+
     bot.api.reactions.add({
       timestamp: message.ts,
       channel: message.channel,
       name: 'robot_face',
     });
-    await bot.changeContext(message.reference)
+
     const programs = await ListPrograms(key, base);
     let blocks = []
     let row = 0;
@@ -60,13 +64,27 @@ module.exports = function (controller) {
     if (row != 0) { await bot.reply(message, { blocks }); }
   }
 
-  const ReportPrograms = async (bot, message, key, base) => {
+  const ReportPrograms = async (bot, message, key) => {
+    await bot.changeContext(message.reference)
+    let user;
+    try {
+      user = await controller.storage.read([`${message.team}_users`])
+      user = user[`${message.team}_users`][message.user]
+      if (!user.airtableBase) {
+        bot.reply(message, "You didn't choose an Airtable base \n Say: set airtable base xxxxxxxxxxx to choose one.")
+        return
+      }
+    } catch (error) {
+      bot.reply(message, "Who are you? I don't think I have your username. Say hi to me.");
+    }
+    const base = user.airtableBase
+
     bot.api.reactions.add({
       timestamp: message.ts,
       channel: message.channel,
       name: 'robot_face',
     });
-    await bot.changeContext(message.reference)
+
     const programs = await ListPrograms(key, base);
     const byTypes = _.groupBy(programs, "Program Type");
     let blocks = []

@@ -20,7 +20,7 @@ require('dotenv').config();
 let storage = null;
 if (process.env.MONGO_URI) {
     storage = mongoStorage = new MongoDbStorage({
-        url : process.env.MONGO_URI,
+        url: process.env.MONGO_URI,
     });
 }
 
@@ -29,14 +29,14 @@ if (process.env.MONGO_URI) {
 const adapter = new SlackAdapter({
     // parameters used to secure webhook endpoint
     verificationToken: process.env.VERIFICATION_TOKEN,
-    clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,  
+    clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
 
     // credentials used to set up oauth for multi-team apps
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    scopes: ['bot', 'users:read', 'users:read.email'], 
+    scopes: ['bot', 'users:read', 'users:read.email'],
     redirectUri: process.env.REDIRECT_URI,
- 
+
     // functions required for retrieving team-specific info
     // for use in multi-team apps
     getTokenForTeam: getTokenForTeam,
@@ -52,9 +52,7 @@ adapter.use(new SlackMessageTypeMiddleware());
 
 const controller = new Botkit({
     webhook_uri: '/api/messages',
-
     adapter: adapter,
-
     storage
 });
 
@@ -90,7 +88,7 @@ controller.ready(() => {
 
 controller.webserver.get('/', (req, res) => {
 
-    res.send(`This app is running Botkit ${ controller.version }.`);
+    res.send(`This app is running Botkit ${controller.version}.`);
 
 });
 
@@ -112,16 +110,16 @@ controller.webserver.get('/install/auth', async (req, res) => {
 
         storage.write({
             [results.team_id]: {
-              bot_access_token: results.bot.bot_access_token,
-              bot_user_id: results.bot.bot_user_id,
+                bot_access_token: results.bot.bot_access_token,
+                bot_user_id: results.bot.bot_user_id,
             },
-          })
+        })
 
         // Store token by team in bot state.
         tokenCache[results.team_id] = results.bot.bot_access_token;
 
         // Capture team to bot id
-        userCache[results.team_id] =  results.bot.bot_user_id;
+        userCache[results.team_id] = results.bot.bot_user_id;
 
         res.json('Success! Bot installed.');
 
@@ -137,27 +135,27 @@ let userCache = {};
 
 if (process.env.TOKENS) {
     tokenCache = JSON.parse(process.env.TOKENS);
-} 
+}
 
 if (process.env.USERS) {
     userCache = JSON.parse(process.env.USERS);
-} 
+}
 
-async function getTokenForTeam(teamId){
+async function getTokenForTeam(teamId) {
     const team = (await storage.read([teamId]))[teamId];
     if (team && team.bot_access_token) {
         return team.bot_access_token
     } else {
         console.error('Team not found in tokenCache: ', teamId);
     }
-  }
-  
-  async function getBotUserByTeam(teamId) {
+}
+
+async function getBotUserByTeam(teamId) {
     const team = (await storage.read([teamId]))[teamId];
     if (team && team.bot_user_id) {
         return team.bot_user_id
     } else {
-      console.error('Team not found in userCache: ', teamId);
+        console.error('Team not found in userCache: ', teamId);
     }
-  }
+}
 

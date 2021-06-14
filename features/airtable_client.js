@@ -8,37 +8,37 @@ module.exports = function (controller) {
   const key = process.env.AIRTABLE_API_KEY;
 
   controller.hears('report clients', 'message,direct_message', async (bot, message) => {
-    let user;
-    try {
-      user = (await controller.storage.read([message.user]))[message.user]
-      if (user.airtableBase) {
-        ShowReportClients(bot, message, key, user.airtableBase);
-      }
-    } catch (error) {
-    }
+    ShowReportClients({ bot, message, key });
+    return true;
   });
 
   controller.hears(new RegExp(/client (.*?)$/i), 'message,direct_message', async (bot, message) => {
     const name = message.matches[1];
-    let user;
-    try {
-      user = (await controller.storage.read([message.user]))[message.user]
-      if (user.airtableBase) {
-        ShowDetailsClient(bot, message, key, user.airtableBase, name);
-      }
-    } catch (error) {
-    }
-
+    ShowDetailsClient(bot, message, key, name);
+    return true;
   });
 
 
-  const ShowReportClients = async (bot, message, key, base) => {
+  const ShowReportClients = async ({ bot, message, key }) => {
+    await bot.changeContext(message.reference)
+    let user;
+    try {
+      user = await controller.storage.read([`${message.team}_users`])
+      user = user[`${message.team}_users`][message.user]
+      if (!user.airtableBase) {
+        bot.reply(message, "You didn't choose an Airtable base \n Say: set airtable base xxxxxxxxxxx to choose one.")
+        return
+      }
+    } catch (error) {
+      bot.reply(message, "Who are you? I don't think I have your username. Say hi to me.");
+    }
+    const base = user.airtableBase
+
     bot.api.reactions.add({
       timestamp: message.ts,
       channel: message.channel,
       name: 'robot_face',
     });
-    await bot.changeContext(message.reference)
     const clients = await ListClients(key, base);
     let blocks = []
 
@@ -104,13 +104,27 @@ module.exports = function (controller) {
     await bot.reply(message, { blocks });
   }
 
-  const ShowDetailsClient = async (bot, message, key, base, name) => {
+  const ShowDetailsClient = async (bot, message, key, name) => {
+    await bot.changeContext(message.reference)
+    let user;
+    try {
+      user = await controller.storage.read([`${message.team}_users`])
+      user = user[`${message.team}_users`][message.user]
+      if (!user.airtableBase) {
+        bot.reply(message, "You didn't choose an Airtable base \n Say: set airtable base xxxxxxxxxxx to choose one.")
+        return
+      }
+    } catch (error) {
+      bot.reply(message, "Who are you? I don't think I have your username. Say hi to me.");
+    }
+    const base = user.airtableBase
+
     bot.api.reactions.add({
       timestamp: message.ts,
       channel: message.channel,
       name: 'robot_face',
     });
-    await bot.changeContext(message.reference)
+
     const clients = await ListClients(key, base, name);
     const coaches = await ListCoaches(key, base);
     const programs = await ListPrograms(key, base);
