@@ -1,5 +1,4 @@
 require('dotenv').config();
-const ListCoaches = require("../airtable/coaches")
 module.exports = function (controller) {
 
   controller.hears(new RegExp(/set airtable base (.*?)$/i), ['direct_message'], async (bot, message) => {
@@ -93,7 +92,7 @@ module.exports = function (controller) {
         bot.reply(message, 'I do not know you!')
       }
     } catch (error) {
-      bot.reply(message, error.toString())
+      bot.reply(message, error.toString());
     }
   }
 }
