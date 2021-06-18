@@ -9,7 +9,7 @@
 */
 module.exports = function (controller) {
 
-  controller.hears('need motivation', 'message,direct_message', async (bot, message) => {
+  controller.hears(['hi', 'need motivation'], 'message,direct_message', async (bot, message) => {
     const phrases = [
       `"Success is not final; failure is not fatal: It is the courage to continue that counts." — Winston S. Churchill`,
       `"It is better to fail in originality than to succeed in imitation." — Herman Melville`,
