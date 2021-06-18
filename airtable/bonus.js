@@ -17,7 +17,7 @@ const Distribute = async ({ key, base, value }) => {
   await Update({ apiKey: key, base, table: "Bonus", records: payload });
 }
 
-const Give = async ({ key, base, values }) => {
+const UpdateBonus = async ({ key, base, values }) => {
   await Update({ apiKey: key, base, table: "Bonus", records: values });
 }
 
@@ -65,4 +65,4 @@ const Redeem = async (key, base, users) => {
 
 }
 
-module.exports = { Distribute, CreateUsers, ListUsers, Give }
+module.exports = { Distribute, CreateUsers, ListUsers, UpdateBonus }

@@ -23,7 +23,7 @@
 require('dotenv').config();
 const { random } = require('lodash');
 const _ = require("lodash");
-const { CreateUsers, ListUsers, Distribute, Give } = require("../airtable/bonus");
+const { CreateUsers, ListUsers, Distribute, UpdateBonus } = require("../airtable/bonus");
 
 const values = ['#TeamPlay', '#Creativity', '#Resilience', '#Leadership', '#Empowerment'];
 
@@ -108,7 +108,7 @@ module.exports = function (controller) {
               }
             }
 
-            await Give({ key, base: team.airtableBaseBonus, values: [decrease, increase] })
+            await UpdateBonus({ key, base: team.airtableBaseBonus, values: [decrease, increase] })
 
             //publish on channel bonus            
             await bot.say({ channel: 'bonus', text: `${userGive.Name} gave: \n   ${message.text}` })
@@ -213,4 +213,69 @@ module.exports = function (controller) {
     }
   }
 
+  controller.hears(new RegExp(/I wanna redeen ([0-9]+)/i), 'direct_message', async (bot, message) => {
+    const payload = {
+      bot,
+      message,
+      key,
+      redeen: message.matches[1] * 1,
+    }
+    RedeenBonus(payload);
+    return true;
+  });
+
+  const RedeenBonus = async ({ bot, message, key, redeen }) => {
+    await bot.changeContext(message.reference)
+    await bot.api.reactions.add({
+      timestamp: message.ts,
+      channel: message.channel,
+      name: 'robot_face',
+    });
+    let users;
+    try {
+      users = await controller.storage.read([`${message.team}_users`]);
+      if (users[`${message.team}_users`]) {
+        team = await controller.storage.read([message.team]);
+        if (team[message.team]) {
+          team = team[message.team];
+          if (team.airtableBaseBonus) {
+            const user = message.user;
+            users = users[`${message.team}_users`];
+            let usersBonus = await ListUsers({ key, base: team.airtableBaseBonus })
+            usersBonus = _.keyBy(usersBonus, "id");
+
+            if (!users[user] || !users[user].airtableID || !usersBonus[users[user].airtableID]) {
+              bot.reply(message, "How should I tell you... You are not in the Bonus Database yet");
+              return true;
+            }
+            const userRedeen = usersBonus[users[user].airtableID];
+
+            if (userRedeen["Amount Received"] < redeen) {
+              bot.reply(message, "Dude, you don't have the balance for this!");
+              return true;
+            }
+
+            const payloadRedeen = {
+              id: userRedeen.id,
+              fields: {
+                ["Amount Received"]: userRedeen["Amount Received"] - redeen,
+                ["Amount Redeemed"]: userRedeen["Amount Redeemed"] + redeen,
+              }
+            }
+
+            const result = await UpdateBonus({ key, base: team.airtableBaseBonus, values: [payloadRedeen] })
+
+            bot.reply(message, "Done.");
+          }
+          else {
+            bot.reply(message, "Your team does not have a Bonus database set up yet.");
+            return true;
+          }
+        }
+      }
+    }
+    catch (error) {
+      bot.reply(message, error.toString());
+    }
+  }
 }
