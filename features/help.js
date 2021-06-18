@@ -19,7 +19,7 @@ const blocks = [
     "type": "section",
     "text": {
       "type": "mrkdwn",
-      "text": "*Miscellany*\n    need motivation\n    dm me\n     "
+      "text": "*Miscellany*\n    need motivation\n    dm me\n     do you do charts"
     }
   },
   {

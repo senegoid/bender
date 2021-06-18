@@ -14,7 +14,7 @@ const sample = {
 }
 
 module.exports = (controller) => {
-  controller.hears(['Do you do charts?'], 'direct_message,direct_mention,mention', async (bot, message) => {
+  controller.hears(['do you do charts'], 'direct_message,direct_mention,mention', async (bot, message) => {
     await bot.reply(message, "Of course, of all kinds");
     await bot.reply(message, blocks);
     return true;
