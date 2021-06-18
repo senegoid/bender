@@ -54,6 +54,12 @@ module.exports = function (controller) {
       channel: message.channel,
       name: 'robot_face',
     });
+
+    if (user === recipient) {
+      bot.reply(message, "You can't give it to yourself");
+      return true;
+    }
+
     let users;
     try {
       users = await controller.storage.read([`${message.team}_users`]);
@@ -176,7 +182,7 @@ module.exports = function (controller) {
 
   }
 
-  controller.hears(new RegExp(/distribute ([0-9]+)/i), 'message,direct_message', async (bot, message) => {
+  controller.hears(new RegExp(/distribute ([0-9]+)/i), 'direct_message', async (bot, message) => {
     const payload = {
       bot,
       message,
@@ -213,18 +219,18 @@ module.exports = function (controller) {
     }
   }
 
-  controller.hears(new RegExp(/I wanna redeen ([0-9]+)/i), 'direct_message', async (bot, message) => {
+  controller.hears(new RegExp(/redeem ([0-9]+)/i), 'direct_message', async (bot, message) => {
     const payload = {
       bot,
       message,
       key,
-      redeen: message.matches[1] * 1,
+      redeem: message.matches[1] * 1,
     }
-    RedeenBonus(payload);
+    RedeemBonus(payload);
     return true;
   });
 
-  const RedeenBonus = async ({ bot, message, key, redeen }) => {
+  const RedeemBonus = async ({ bot, message, key, redeem }) => {
     await bot.changeContext(message.reference)
     await bot.api.reactions.add({
       timestamp: message.ts,
@@ -248,22 +254,22 @@ module.exports = function (controller) {
               bot.reply(message, "How should I tell you... You are not in the Bonus Database yet");
               return true;
             }
-            const userRedeen = usersBonus[users[user].airtableID];
+            const userRedeem = usersBonus[users[user].airtableID];
 
-            if (userRedeen["Amount Received"] < redeen) {
+            if (userRedeem["Amount Received"] < redeem) {
               bot.reply(message, "Dude, you don't have the balance for this!");
               return true;
             }
 
-            const payloadRedeen = {
-              id: userRedeen.id,
+            const payloadRedeem = {
+              id: userRedeem.id,
               fields: {
-                ["Amount Received"]: userRedeen["Amount Received"] - redeen,
-                ["Amount Redeemed"]: userRedeen["Amount Redeemed"] + redeen,
+                ["Amount Received"]: userRedeem["Amount Received"] - redeem,
+                ["Amount Redeemed"]: userRedeem["Amount Redeemed"] + redeem,
               }
             }
 
-            const result = await UpdateBonus({ key, base: team.airtableBaseBonus, values: [payloadRedeen] })
+            const result = await UpdateBonus({ key, base: team.airtableBaseBonus, values: [payloadRedeem] })
 
             bot.reply(message, "Done.");
           }
