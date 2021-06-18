@@ -3,7 +3,7 @@ const { List } = require("./core")
 const ListPrograms = async (key, baseAtual) => {
   const config = {
     apiKey: key,
-    baseId: baseAtual,
+    base: baseAtual,
     table: "Programs",
     view: "",
     sort: [],

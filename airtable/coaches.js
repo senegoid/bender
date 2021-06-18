@@ -4,7 +4,7 @@ const { List } = require("./core")
 const ListCoaches = async (key, baseAtual, name = null) => {
   const config = {
     apiKey: key,
-    baseId: baseAtual,
+    base: baseAtual,
     table: "People",
     view: "Coaches",
     sort: [],
@@ -17,7 +17,7 @@ const ListClients = async (key, baseAtual) => {
 
   const config = {
     apiKey: key,
-    baseId: baseAtual,
+    base: baseAtual,
     table: "People",
     view: "Client",
     sort: [{ field: "Coach", direction: "desc" }],
