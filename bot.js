@@ -80,7 +80,7 @@ const controllerSlack = new Botkit({
 const controllerRocketChat = BotkitRocketChat({storage}, rocketOptions)
 
 // imports local conversations to use bot without the botkit api
-require(__dirname + '/components/local_conversations.js')(controllerRocketChat)
+//require(__dirname + '/components/local_conversations.js')(controllerRocketChat)
 
 controllerRocketChat.startBot()
 

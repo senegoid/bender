@@ -11,7 +11,7 @@ through the conversation are chosen based on the user's response.
 
 module.exports = function(controller) {
 
-    controller.hears(['color'], 'message_received', function(bot, message) {
+    controller.hears(['color'], 'direct_message,message_received', function(bot, message) {
 
         bot.startConversation(message, function(err, convo) {
             convo.say('This is an example of using convo.ask with a single callback.');

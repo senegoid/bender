@@ -1,29 +1,11 @@
-/*
 
-    This is a sample bot that provides a simple todo list function
-    and demonstrates the Botkit storage system.
-
-    Botkit comes with a generic storage system that can be used to
-    store arbitrary information about a user or channel. Storage
-    can be backed by a built in JSON file system, or one of many
-    popular database systems.
-
-    See:
-
-        botkit-storage-mongo
-        botkit-storage-firebase
-        botkit-storage-redis
-        botkit-storage-dynamodb
-        botkit-storage-mysql
-
-*/
 
 module.exports = function(controller) {
 
     // listen for someone saying 'tasks' to the bot
     // reply with a list of current tasks loaded from the storage system
     // based on this user's id
-    controller.hears(['tasks','todo'], 'message_received', function(bot, message) {
+    controller.hears(['tasks','todo'], 'direct_message', function(bot, message) {
 
         // load user from storage...
         controller.storage.users.get(message.user, function(err, user) {
@@ -47,7 +29,7 @@ module.exports = function(controller) {
 
     // listen for a user saying "add <something>", and then add it to the user's list
     // store the new list in the storage system
-    controller.hears(['add (.*)'],'message_received', function(bot, message) {
+    controller.hears(['add (.*)'],'direct_message', function(bot, message) {
 
         var newtask = message.match[1];
         controller.storage.users.get(message.user, function(err, user) {
@@ -74,7 +56,7 @@ module.exports = function(controller) {
     });
 
     // listen for a user saying "done <number>" and mark that item as done.
-    controller.hears(['done (.*)'],'message_received', function(bot, message) {
+    controller.hears(['done (.*)'],'direct_message', function(bot, message) {
 
         var number = message.match[1];
 
