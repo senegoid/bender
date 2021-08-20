@@ -24,9 +24,29 @@ if (process.env.MONGO_URI) {
     });
 }
 
+const BotkitRocketChat = require('botkit-rocketchat-connector')
+const debug = require('debug')('botkit:main')
 
+// the environment variables from RocketChat is passed in bot_options
+// because the module it's external, so haven't access to .env file
+const rocketOptions = {
+    debug: true,
+    studio_token: process.env.studio_token,
+    studio_command_uri: process.env.studio_command_uri,
+    studio_stats_uri: process.env.studio_command_uri,
+    rocketchat_host: process.env.ROCKETCHAT_URL,
+    rocketchat_bot_user: process.env.ROCKETCHAT_USER,
+    rocketchat_bot_pass: process.env.ROCKETCHAT_PASSWORD,
+    rocketchat_ssl: process.env.ROCKETCHAT_USE_SSL,
+    rocketchat_bot_rooms: process.env.ROCKETCHAT_ROOM,
+    rocketchat_bot_mention_rooms: process.env.MENTION_ROOMS,
+    rocketchat_bot_direct_messages: process.env.RESPOND_TO_DM,
+    rocketchat_bot_live_chat: process.env.RESPOND_TO_LIVECHAT,
+    rocketchat_bot_edited: process.env.RESPOND_TO_EDITED
+  }
+  
 
-const adapter = new SlackAdapter({
+const slackAdapter = new SlackAdapter({
     // parameters used to secure webhook endpoint
     verificationToken: process.env.VERIFICATION_TOKEN,
     clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
@@ -44,36 +64,77 @@ const adapter = new SlackAdapter({
 });
 
 // Use SlackEventMiddleware to emit events that match their original Slack event types.
-adapter.use(new SlackEventMiddleware());
+slackAdapter.use(new SlackEventMiddleware());
 
 // Use SlackMessageType middleware to further classify messages as direct_message, direct_mention, or mention
-adapter.use(new SlackMessageTypeMiddleware());
+slackAdapter.use(new SlackMessageTypeMiddleware());
 
 
-const controller = new Botkit({
+const controllerSlack = new Botkit({
     webhook_uri: '/api/messages',
-    adapter: adapter,
+    adapter: slackAdapter,
     storage
 });
 
+// create the Botkit controller with the configurations of the RocketChatBot
+const controllerRocketChat = BotkitRocketChat({storage}, rocketOptions)
+
+// imports local conversations to use bot without the botkit api
+//require(__dirname + '/components/local_conversations.js')(controllerRocketChat)
+
+controllerRocketChat.startBot()
+
+controllerRocketChat.startTicking()
+
+var normalizedPath = require('path').join(__dirname, 'skills')
+require('fs').readdirSync(normalizedPath).forEach(function (file) {
+  require('./skills/' + file)(controllerRocketChat)
+})
+
 if (process.env.CMS_URI) {
-    controller.usePlugin(new BotkitCMSHelper({
+    controllerSlack.usePlugin(new BotkitCMSHelper({
         uri: process.env.CMS_URI,
         token: process.env.CMS_TOKEN,
     }));
 }
 
+if (process.env.studio_token) {
+  // TODO: configure the EVENTS here
+  controllerRocketChat.on(['direct_message', 'live_chat', 'channel', 'mention', 'message'], function (bot, message) {
+  controllerRocketChat.studio.runTrigger(bot, message.text, message.user, message.channel, message).then(function (convo) {
+    if (!convo) {
+      // no trigger was matched
+      // If you want your botbot to respond to every message,
+      // define a 'fallback' script in Botkit Studio
+      // and uncomment the line below.
+      // controllerRocketChat.studio.run(bot, 'fallback', message.user, message.channel);
+    } else {
+      // set variables here that are needed for EVERY script
+      // use controllerRocketChat.studio.before('script') to set variables specific to a script
+      convo.setVar('current_time', new Date())
+    }
+    }).catch(function (err) {
+      bot.reply(message, 'I experienced an error with a request to Botkit Studio: ' + err)
+      debug('Botkit Studio: ', err)
+    })
+  })
+} else {
+  console.log('~~~~~~~~~~')
+  console.log('NOTE: Botkit Studio functionality has not been enabled')
+  console.log('To enable, pass in a studio_token parameter with a token from https://studio.botkit.ai/')
+}
+
 // Once the bot has booted up its internal services, you can use them to do stuff.
-controller.ready(() => {
+controllerSlack.ready(() => {
 
     // load traditional developer-created local custom feature modules
-    controller.loadModules(__dirname + '/features');
+    controllerSlack.loadModules(__dirname + '/features');
 
     /* catch-all that uses the CMS to trigger dialogs */
-    if (controller.plugins.cms) {
-        controller.on('message,direct_message', async (bot, message) => {
+    if (controllerSlack.plugins.cms) {
+        controllerSlack.on('message,direct_message', async (bot, message) => {
             let results = false;
-            results = await controller.plugins.cms.testTrigger(bot, message);
+            results = await controllerSlack.plugins.cms.testTrigger(bot, message);
 
             if (results !== false) {
                 // do not continue middleware!
@@ -86,9 +147,9 @@ controller.ready(() => {
 
 
 
-controller.webserver.get('/', (req, res) => {
+controllerSlack.webserver.get('/', (req, res) => {
 
-    res.send(`This app is running Botkit ${controller.version}.`);
+    res.send(`This app is running Botkit ${controllerSlack.version}.`);
 
 });
 
@@ -97,14 +158,14 @@ controller.webserver.get('/', (req, res) => {
 
 
 
-controller.webserver.get('/install', (req, res) => {
+controllerSlack.webserver.get('/install', (req, res) => {
     // getInstallLink points to slack's oauth endpoint and includes clientId and scopes
-    res.redirect(controller.adapter.getInstallLink());
+    res.redirect(controllerSlack.adapter.getInstallLink());
 });
 
-controller.webserver.get('/install/auth', async (req, res) => {
+controllerSlack.webserver.get('/install/auth', async (req, res) => {
     try {
-        const results = await controller.adapter.validateOauthCode(req.query.code);
+        const results = await controllerSlack.adapter.validateOauthCode(req.query.code);
 
         console.log('FULL OAUTH DETAILS', results);
 
