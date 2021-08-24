@@ -7,7 +7,7 @@ converter.setOption('openLinksInNewWindow', true);
 
 var Botkit = {
     config: {
-        ws_url: (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host,
+        ws_url: (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.hostname+ ':3001',
         reconnect_timeout: 3000,
         max_reconnect: 5,
         enable_history: false,
@@ -115,7 +115,7 @@ var Botkit = {
     webhook: function (message) {
         var that = this;
 
-        that.request('/api/messages', message).then(function (messages) {
+        that.request('/api/msg', message).then(function (messages) {
             messages.forEach((message) => {
                 that.trigger(message.type, message);
             });
