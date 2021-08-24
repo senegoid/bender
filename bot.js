@@ -2,20 +2,28 @@
 // |__) /  \  |  |__/ |  |  
 // |__) \__/  |  |  \ |  |  
 
-// This is the main file for the bender bot.
+const express = require("express");
 
-// Import Botkit's core features
 const { Botkit } = require('botkit');
 const { BotkitCMSHelper } = require('botkit-plugin-cms');
 
-// Import a platform-specific adapter for slack.
-
+const { WebAdapter } = require('botbuilder-adapter-web');
 const { SlackAdapter, SlackMessageTypeMiddleware, SlackEventMiddleware } = require('botbuilder-adapter-slack');
 
 const { MongoDbStorage } = require('botbuilder-storage-mongodb');
 
-// Load process.env values from .env file
 require('dotenv').config();
+
+const webserver = express();
+webserver.use((req, res, next) => {
+    req.rawBody = '';
+    req.on('data', function (chunk) {
+        req.rawBody += chunk;
+    });
+    next();
+});
+webserver.use(express.json());
+webserver.use(express.urlencoded({ extended: true }));
 
 let storage = null;
 if (process.env.MONGO_URI) {
@@ -27,8 +35,6 @@ if (process.env.MONGO_URI) {
 const BotkitRocketChat = require('botkit-rocketchat-connector')
 const debug = require('debug')('botkit:main')
 
-// the environment variables from RocketChat is passed in bot_options
-// because the module it's external, so haven't access to .env file
 const rocketOptions = {
     debug: true,
     studio_token: process.env.studio_token,
@@ -47,43 +53,41 @@ const rocketOptions = {
   
 
 const slackAdapter = new SlackAdapter({
-    // parameters used to secure webhook endpoint
     verificationToken: process.env.VERIFICATION_TOKEN,
     clientSigningSecret: process.env.CLIENT_SIGNING_SECRET,
-
-    // credentials used to set up oauth for multi-team apps
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
     scopes: ['bot', 'users:read', 'users:read.email'],
     redirectUri: process.env.REDIRECT_URI,
 
-    // functions required for retrieving team-specific info
-    // for use in multi-team apps
     getTokenForTeam: getTokenForTeam,
     getBotUserByTeam: getBotUserByTeam,
 });
 
-// Use SlackEventMiddleware to emit events that match their original Slack event types.
 slackAdapter.use(new SlackEventMiddleware());
-
-// Use SlackMessageType middleware to further classify messages as direct_message, direct_mention, or mention
 slackAdapter.use(new SlackMessageTypeMiddleware());
 
 
 const controllerSlack = new Botkit({
+    webserver,
     webhook_uri: '/api/messages',
     adapter: slackAdapter,
+    storage, 
+});
+
+
+const webAdapter = new WebAdapter({port: 3001});
+
+const controllerWeb = new Botkit({
+    webserver,
+    webhook_uri: '/api/msg',
+    adapter: webAdapter,
     storage
 });
 
-// create the Botkit controller with the configurations of the RocketChatBot
+
 const controllerRocketChat = BotkitRocketChat({storage}, rocketOptions)
-
-// imports local conversations to use bot without the botkit api
-//require(__dirname + '/components/local_conversations.js')(controllerRocketChat)
-
 controllerRocketChat.startBot()
-
 controllerRocketChat.startTicking()
 
 var normalizedPath = require('path').join(__dirname, 'skills')
@@ -99,7 +103,6 @@ if (process.env.CMS_URI) {
 }
 
 if (process.env.studio_token) {
-  // TODO: configure the EVENTS here
   controllerRocketChat.on(['direct_message', 'live_chat', 'channel', 'mention', 'message'], function (bot, message) {
   controllerRocketChat.studio.runTrigger(bot, message.text, message.user, message.channel, message).then(function (convo) {
     if (!convo) {
@@ -124,13 +127,9 @@ if (process.env.studio_token) {
   console.log('To enable, pass in a studio_token parameter with a token from https://studio.botkit.ai/')
 }
 
-// Once the bot has booted up its internal services, you can use them to do stuff.
-controllerSlack.ready(() => {
+controllerSlack.loadModules(__dirname + '/features');
+controllerWeb.loadModules(__dirname + '/featuresWeb');
 
-    // load traditional developer-created local custom feature modules
-    controllerSlack.loadModules(__dirname + '/features');
-
-    /* catch-all that uses the CMS to trigger dialogs */
     if (controllerSlack.plugins.cms) {
         controllerSlack.on('message,direct_message', async (bot, message) => {
             let results = false;
@@ -143,23 +142,10 @@ controllerSlack.ready(() => {
         });
     }
 
-});
-
-
-
-controllerSlack.webserver.get('/', (req, res) => {
-
-    res.send(`This app is running Botkit ${controllerSlack.version}.`);
-
-});
-
-
-
 
 
 
 controllerSlack.webserver.get('/install', (req, res) => {
-    // getInstallLink points to slack's oauth endpoint and includes clientId and scopes
     res.redirect(controllerSlack.adapter.getInstallLink());
 });
 
@@ -176,10 +162,7 @@ controllerSlack.webserver.get('/install/auth', async (req, res) => {
             },
         })
 
-        // Store token by team in bot state.
         tokenCache[results.team_id] = results.bot.bot_access_token;
-
-        // Capture team to bot id
         userCache[results.team_id] = results.bot.bot_user_id;
 
         res.json('Success! Bot installed.');
@@ -194,13 +177,6 @@ controllerSlack.webserver.get('/install/auth', async (req, res) => {
 let tokenCache = {};
 let userCache = {};
 
-if (process.env.TOKENS) {
-    tokenCache = JSON.parse(process.env.TOKENS);
-}
-
-if (process.env.USERS) {
-    userCache = JSON.parse(process.env.USERS);
-}
 
 async function getTokenForTeam(teamId) {
     const team = (await storage.read([teamId]))[teamId];
@@ -220,3 +196,13 @@ async function getBotUserByTeam(teamId) {
     }
 }
 
+if (require.main === module) {
+    const http = require("http");
+    const port = process.env.PORT || 3000;
+    const httpserver = http.createServer(webserver);
+    httpserver.listen(port, function () {
+        console.log("Slack Webhook endpoint online:  http://127.0.0.1:" + port + '/api/messages' );
+        console.log("web Webhook endpoint online:  http://127.0.0.1:" + port + '/api/msg');
+        console.log('Chat with me: http://localhost:' + port);
+    });
+};
