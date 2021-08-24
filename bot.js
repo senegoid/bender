@@ -2,6 +2,7 @@
 // |__) /  \  |  |__/ |  |  
 // |__) \__/  |  |  \ |  |  
 
+const http = require("http");
 const express = require("express");
 
 const { Botkit } = require('botkit');
@@ -24,6 +25,9 @@ webserver.use((req, res, next) => {
 });
 webserver.use(express.json());
 webserver.use(express.urlencoded({ extended: true }));
+
+const port = process.env.PORT || 3000;
+const httpserver = http.createServer(webserver);
 
 let storage = null;
 if (process.env.MONGO_URI) {
@@ -76,7 +80,7 @@ const controllerSlack = new Botkit({
 });
 
 
-const webAdapter = new WebAdapter({port: 3001});
+const webAdapter = new WebAdapter({server: httpserver});
 
 const controllerWeb = new Botkit({
     webserver,
@@ -197,9 +201,7 @@ async function getBotUserByTeam(teamId) {
 }
 
 if (require.main === module) {
-    const http = require("http");
-    const port = process.env.PORT || 3000;
-    const httpserver = http.createServer(webserver);
+   
     httpserver.listen(port, function () {
         console.log("Slack Webhook endpoint online:  http://127.0.0.1:" + port + '/api/messages' );
         console.log("web Webhook endpoint online:  http://127.0.0.1:" + port + '/api/msg');
