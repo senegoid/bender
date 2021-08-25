@@ -1,22 +1,24 @@
 require('dotenv').config();
-const { ListCoaches, ListClients } = require("../airtable/coaches");
+const _ = require("lodash");
+const { ListPrograms } = require('../../airtable/programs');
 
 module.exports = function (controller) {
   const key = process.env.AIRTABLE_API_KEY;
 
-  controller.hears('show coaches', 'message,direct_message', async (bot, message) => {
-    ShowListCoatches(bot, message, key);
+  controller.hears('show programs', 'message,direct_message', async (bot, message) => {
+
+    ShowPrograms(bot, message, key);
     return true;
   });
 
-  controller.hears(new RegExp(/coach (.*?)$/i), 'message,direct_message', async (bot, message) => {
-    const name = message.matches[1];
-    ShowDetailsCoach(bot, message, key, name);
+  controller.hears('report type of programs', 'message,direct_message', async (bot, message) => {
+
+    ReportPrograms(bot, message, key);
     return true;
   });
 
 
-  const ShowListCoatches = async (bot, message, key) => {
+  const ShowPrograms = async (bot, message, key) => {
     await bot.changeContext(message.reference)
     let user;
     try {
@@ -37,18 +39,16 @@ module.exports = function (controller) {
       name: 'robot_face',
     });
 
-    const coaches = await ListCoaches(key, base);
-    const clients = await ListClients(key, base);
+    const programs = await ListPrograms(key, base);
     let blocks = []
     let row = 0;
-    for await (let coach of coaches) {
+    for await (let program of programs) {
       row++;
-      const coachClients = clients.filter((client) => client.Coach[0] === coach.id);
       blocks.push({
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": `*${coach["Full Name"]}*   ${coach["Coach Level"]}     Fee: ${coach["Coaching Fee Percentage"] * 100}% \n${coach.Email}     Clients: ${coachClients.length}`
+          "text": `*${program["Program Name"]}*\n   ${program["Program Type"]}     Clients: ${program["Number of Clients on the Program"]}`
         }
       });
       blocks.push(
@@ -64,7 +64,7 @@ module.exports = function (controller) {
     if (row != 0) { await bot.reply(message, { blocks }); }
   }
 
-  const ShowDetailsCoach = async (bot, message, key, name) => {
+  const ReportPrograms = async (bot, message, key) => {
     await bot.changeContext(message.reference)
     let user;
     try {
@@ -85,18 +85,23 @@ module.exports = function (controller) {
       name: 'robot_face',
     });
 
-    const coaches = await ListCoaches(key, base, name);
-    const clients = await ListClients(key, base);
+    const programs = await ListPrograms(key, base);
+    const byTypes = _.groupBy(programs, "Program Type");
     let blocks = []
     let row = 0;
-    for await (let coach of coaches) {
+    for (const programType in byTypes) {
+      const _programs = _.keysIn(_.countBy(byTypes[programType], 'Program Name')).length;
+      const _sumTotalPrice = _.sumBy(byTypes[programType], (n) => n["Total Price"])
+      const _sumAmount = _.sumBy(byTypes[programType], (p) => p.amount || 0)
+      const _sumRetentionAmount = _.sumBy(byTypes[programType], (n) => n["retention-amount"])
+      const _sumCostPerPayment = _.sumBy(byTypes[programType], (n) => n["Cost Per Payment"])
+
       row++;
-      const coachClients = clients.filter((client) => client.Coach[0] === coach.id);
       blocks.push({
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": `*${coach["Full Name"]}*   ${coach["Coach Level"]}     Class:${coach.Class}      Fee: ${coach["Coaching Fee Percentage"] * 100}% \n${coach.Email}     Clients: ${coachClients.length} / Cap: ${coach["Coach Client Cap"]}     Birthday:${coach.Birthday}   `
+          "text": `*${programType}*\n   Programs: ${_programs}     Total Price:  ${_sumTotalPrice}  \n   Amount: ${_sumAmount}      Retenntion: ${_sumRetentionAmount}      Cost Per Payment: ${_sumCostPerPayment}`
         }
       });
       blocks.push(

@@ -1,4 +1,4 @@
-const versao = require('../delta/versao');
+const versao = require('../../delta/versao');
 
 module.exports = function(controller) {
 

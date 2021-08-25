@@ -90,14 +90,20 @@ const controllerWeb = new Botkit({
 });
 
 
-const controllerRocketChat = BotkitRocketChat({storage}, rocketOptions)
+const controllerRocketChat = BotkitRocketChat({}, rocketOptions)
+controllerRocketChat.storage = storage;
 controllerRocketChat.startBot()
 controllerRocketChat.startTicking()
 
-var normalizedPath = require('path').join(__dirname, 'skills')
-require('fs').readdirSync(normalizedPath).forEach(function (file) {
-  require('./skills/' + file)(controllerRocketChat)
+const normalizedPathCommon = require('path').join(__dirname, 'features/common',)
+require('fs').readdirSync(normalizedPathCommon).forEach(function (file) {
+    require('./features/common/' + file)(controllerRocketChat)
 })
+const normalizedPath = require('path').join(__dirname, 'features/rocketChat',)
+require('fs').readdirSync(normalizedPath).forEach(function (file) {
+  require('./features/rocketChat/' + file)(controllerRocketChat)
+})
+
 
 if (process.env.CMS_URI) {
     controllerSlack.usePlugin(new BotkitCMSHelper({
@@ -125,14 +131,13 @@ if (process.env.studio_token) {
       debug('Botkit Studio: ', err)
     })
   })
-} else {
-  console.log('~~~~~~~~~~')
-  console.log('NOTE: Botkit Studio functionality has not been enabled')
-  console.log('To enable, pass in a studio_token parameter with a token from https://studio.botkit.ai/')
 }
 
-controllerSlack.loadModules(__dirname + '/features');
-controllerWeb.loadModules(__dirname + '/featuresWeb');
+controllerSlack.loadModules(__dirname + '/features/common');
+controllerWeb.loadModules(__dirname + '/features/common');
+
+controllerSlack.loadModules(__dirname + '/features/slack');
+controllerWeb.loadModules(__dirname + '/features/web');
 
     if (controllerSlack.plugins.cms) {
         controllerSlack.on('message,direct_message', async (bot, message) => {
