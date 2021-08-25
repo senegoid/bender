@@ -1,8 +1,8 @@
 require('dotenv').config();
 const _ = require("lodash");
-const { ListClients } = require("../airtable/clients");
-const { ListCoaches } = require("../airtable/coaches");
-const { ListPrograms } = require('../airtable/programs');
+const { ListClients } = require("../../airtable/clients");
+const { ListCoaches } = require("../../airtable/coaches");
+const { ListPrograms } = require('../../airtable/programs');
 
 module.exports = function (controller) {
   const key = process.env.AIRTABLE_API_KEY;

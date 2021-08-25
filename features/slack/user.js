@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const { formatUptime } = require("../helper");
+const { formatUptime } = require("../../helper");
 
 module.exports = async (controller) => {
   controller.hears(['who am i'], 'direct_message,direct_mention,mention', async (bot, message) => {

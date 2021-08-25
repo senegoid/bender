@@ -1,14 +1,3 @@
-/*
-
-WHAT IS THIS?
-
-This module demonstrates simple uses of Botkit's conversation system.
-
-In this example, Botkit hears a keyword, then asks a question. Different paths
-through the conversation are chosen based on the user's response.
-
-*/
-
 module.exports = function(controller) {
 
     controller.hears(['color'], 'direct_message,message_received', function(bot, message) {

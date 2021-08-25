@@ -23,7 +23,7 @@
 require('dotenv').config();
 const { random } = require('lodash');
 const _ = require("lodash");
-const { CreateUsers, ListUsers, Distribute, UpdateBonus } = require("../airtable/bonus");
+const { CreateUsers, ListUsers, Distribute, UpdateBonus } = require("../../airtable/bonus");
 
 const values = ['#TeamPlay', '#Creativity', '#Resilience', '#Leadership', '#Empowerment'];
 
