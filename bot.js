@@ -5,6 +5,8 @@
 const http = require("http");
 const express = require("express");
 
+const errors = require('./notion/error');
+
 const { Botkit } = require('botkit');
 const { BotkitCMSHelper } = require('botkit-plugin-cms');
 
@@ -180,6 +182,17 @@ controllerSlack.webserver.get('/install/auth', async (req, res) => {
         console.error('OAUTH ERROR:', err);
         res.status(401);
         res.send(err.message);
+    }
+});
+
+webserver.post('/errors', async (req, res) => {
+    try{
+      //const { instituicao } = req.params;
+      const { body } = req;
+      errors.add(body);
+      return res.json('ok');
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
     }
 });
 
