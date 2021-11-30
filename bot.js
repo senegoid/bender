@@ -7,7 +7,7 @@ const express = require("express");
 
 const errors = require('./notion/error');
 
-import cors from "cors";
+const cors = require('cors');
 
 const { Botkit } = require('botkit');
 const { BotkitCMSHelper } = require('botkit-plugin-cms');
