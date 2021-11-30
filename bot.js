@@ -7,6 +7,8 @@ const express = require("express");
 
 const errors = require('./notion/error');
 
+import cors from "cors";
+
 const { Botkit } = require('botkit');
 const { BotkitCMSHelper } = require('botkit-plugin-cms');
 
@@ -18,6 +20,7 @@ const { MongoDbStorage } = require('botbuilder-storage-mongodb');
 require('dotenv').config();
 
 const webserver = express();
+webserver.use(cors());
 webserver.use((req, res, next) => {
     req.rawBody = '';
     req.on('data', function (chunk) {
@@ -25,6 +28,7 @@ webserver.use((req, res, next) => {
     });
     next();
 });
+
 webserver.use(express.json());
 webserver.use(express.urlencoded({ extended: true }));
 
